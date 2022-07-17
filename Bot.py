@@ -6,7 +6,7 @@ import discord
 from discord.ext import tasks
 import random
 
-main_channel = 0 #what channel the bot will listen and send commands in (is an integer)
+main_channel = 123456789 #what channel the bot will listen and send commands in
 
 #get api keys from external document
 text_file= open("API_KEYS.txt","r")
@@ -42,7 +42,7 @@ async def on_message(message):
     msg = message.content.lower()
 
 
-    if msg == '$queue':
+    if msg == '$queue' or msg == "$q":
         #await send_discord_message("There are currently " + str(len(current_queue)) + " players in queue")
         tempstr = f"There are currently "  + str(len(current_queue)) +  f" players in queue \n Players in queue: \n       "
         for i in current_queue:
@@ -51,7 +51,7 @@ async def on_message(message):
         await send_discord_message(tempstr)
 
 
-    if msg == '$join':
+    if msg == '$join' or msg == "$j":
         #player would like to join queue
 
         if message.author.id in current_queue:
@@ -85,7 +85,7 @@ async def on_message(message):
         return
 
 
-    if msg == "$leave":
+    if msg == "$leave" or msg == "$l":
             
         if message.author.id in current_queue:
             #player is indeed in the queue, so remove them
@@ -103,9 +103,9 @@ def generate_teams(players):
     return players[0:5], players[5:10]
         
 async def send_discord_message(message):
-    
+
     channel = client.get_channel(main_channel)
-    
+
     await channel.send(message)
 
 
