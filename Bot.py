@@ -1,12 +1,16 @@
 #written by seymo5#2087
+#this bot is written for use with pycord
 
-from logging import captureWarnings
-from types import NoneType
 import discord
 from discord.ext import tasks
 import random
 
-main_channel = 123456789 #what channel the bot will listen and send commands in
+main_channel = 987636202322673724 #what channel the bot will listen and send commands in
+
+# using all intents is not clean or good practice. but it makes my code work <3
+#intents = discord.Intents(messages=True)
+intents = discord.Intents().all()
+
 
 #get api keys from external document
 text_file= open("API_KEYS.txt","r")
@@ -18,17 +22,20 @@ current_queue = []
 
 timeout = 0
 
-client = discord.Client()
+client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
     #send message when bot has finished startup
+    
     print(f'{client.user} has connected to Discord!')
 
     await send_discord_message(f'Im ready to RUMBLE!')
 
 @client.event
 async def on_message(message):
+    
+    print(f'message detected')
 
     global current_queue
     global timeout
@@ -39,14 +46,19 @@ async def on_message(message):
     if message.channel.id != main_channel:
         return #wrong channel bucko
 
+    #msg = ''
     msg = message.content.lower()
 
+    print(str(message.content))
 
-    if msg == '$queue' or msg == "$q":
+    if message.content == '$queue' or message.content == "$q":
         #await send_discord_message("There are currently " + str(len(current_queue)) + " players in queue")
         tempstr = f"There are currently "  + str(len(current_queue)) +  f" players in queue \n Players in queue: \n       "
         for i in current_queue:
-            temp_player = await client.fetch_user(i)
+            #fetch player from cache, if not in cache then get from discord api
+            temp_player = client.get_user(i)
+            if temp_player == None:
+                temp_player = await client.fetch_user(i)
             tempstr = tempstr + str(temp_player.name) + '\n       '
         await send_discord_message(tempstr)
 
@@ -73,7 +85,8 @@ async def on_message(message):
 
             team_blue, team_red = generate_teams(current_queue)
 
-            await send_discord_message(f"Game 69 begins \n \n Blue team: \n <@{team_blue[0]}> \n <@{team_blue[1]}> \n <@{team_blue[2]}> \n <@{team_blue[3]}> \n <@{team_blue[4]}> \n \n Red team: \n <@{team_red[0]}> \n <@{team_red[1]}> \n <@{team_red[2]}> \n <@{team_red[3]}> \n <@{team_red[4]}>")
+            #await send_discord_message(f"Game 69 begins \n \n Blue team: \n <@{team_blue[0]}> \n <@{team_blue[1]}> \n <@{team_blue[2]}> \n <@{team_blue[3]}> \n <@{team_blue[4]}> \n \n Red team: \n <@{team_red[0]}> \n <@{team_red[1]}> \n <@{team_red[2]}> \n <@{team_red[3]}> \n <@{team_red[4]}>")
+            await send_discord_message(f"Game 69 begins \n \n Blue team: \n Top: <@{team_blue[0]}> \n Jg: <@{team_blue[1]}> \n Mid: <@{team_blue[2]}> \n Adc: <@{team_blue[3]}> \n Sup: <@{team_blue[4]}> \n \n Red team: \n Top: <@{team_red[0]}> \n Jg: <@{team_red[1]}> \n Mid: <@{team_red[2]}> \n Adc: <@{team_red[3]}> \n Sup: <@{team_red[4]}>")
 
             current_queue = [] #reset queue as players have been placed in game. there will only ever be a max of 10 players in queue
             return
@@ -104,8 +117,11 @@ def generate_teams(players):
         
 async def send_discord_message(message):
 
+    #if channel is not cached in ram, then fetch it from the discord api.
     channel = client.get_channel(main_channel)
-
+    if channel == None:
+        channel = await client.fetch_channel(int(main_channel))
+    
     await channel.send(message)
 
 
@@ -128,5 +144,6 @@ async def queue_timeout():
 
 
 
-client.run(api_keys[0])
+
 queue_timeout.start() #start the timeout loop
+client.run(api_keys[0])
